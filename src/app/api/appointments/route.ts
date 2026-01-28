@@ -2,7 +2,6 @@ import { apiHandler } from "@/lib/apiHandler";
 import { apiSuccess, apiError } from "@/lib/response";
 import { Appointment } from "@/models/Appointment";
 import { Service } from "@/models/Service";
-import { requireAuth } from "@/lib/requireAuth";
 import {
   createAppointmentSchema,
   getAppointmentsByDaySchema,
