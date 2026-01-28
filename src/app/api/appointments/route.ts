@@ -3,7 +3,10 @@ import { apiSuccess, apiError } from "@/lib/response";
 import { Appointment } from "@/models/Appointment";
 import { Service } from "@/models/Service";
 import { requireAuth } from "@/lib/requireAuth";
-import { createAppointmentSchema } from "@/schemas/appointments";
+import {
+  createAppointmentSchema,
+  getAppointmentsByDaySchema,
+} from "@/schemas/appointments";
 import { validate } from "@/lib/validators";
 
 // ===================== POST APPOINTMENT =========================
@@ -76,24 +79,40 @@ export const POST = apiHandler(
 
 // ===================== GET APPOINTMENTS =========================
 
-export const GET = apiHandler(async (req) => {
-  try {
-    requireAuth(req);
-  } catch {
-    return new Response("Unauthorized", { status: 401 });
-  }
-  const { searchParams } = new URL(req.url);
-  const date = searchParams.get("date");
+export const GET = apiHandler(
+  async (req) => {
+    const { searchParams } = new URL(req.url);
+    const date = searchParams.get("date");
+    const month = searchParams.get("month");
 
-  let query: any = {};
+    //  GET appointments by day
+    if (date) {
+      const appointments = await Appointment.find({ date })
+        .populate("serviceId")
+        .sort({ startTime: 1 });
 
-  if (date) {
-    query.date = date;
-  }
+      return apiSuccess(appointments);
+    }
 
-  const appointments = await Appointment.find(query)
-    .populate("serviceId") // service details
-    .sort({ date: 1, startTime: 1 });
+    // 2. GET appointments by month (count per day)
+    if (month) {
+      // month = "2025-02"
+      const regex = new RegExp(`^${month}-\\d{2}$`);
+      const appointments = await Appointment.find({ date: regex });
+      const counts: Record<string, number> = {};
 
-  return apiSuccess(appointments);
-});
+      appointments.forEach((appt) => {
+        counts[appt.date] = (counts[appt.date] || 0) + 1;
+      });
+      return apiSuccess(counts);
+    }
+
+    // 3. GET all appointments
+    const all = await Appointment.find()
+      .populate("serviceId")
+      .sort({ date: 1, startTime: 1 });
+
+    return apiSuccess(all);
+  },
+  { auth: true },
+);
