@@ -1,7 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { apiError } from "@/lib/response";
 import { requireAuth } from "@/lib/requireAuth";
-import { ApiContext } from "@/types/api";
+import { ApiContext } from "@/types";
 import { rateLimit } from "./rateLimit";
 
 type HandlerFn = (req: Request, context: ApiContext) => Promise<Response>;
