@@ -1,5 +1,27 @@
 import { z } from "zod";
 
+export const appointmentSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email format"),
+  phone: z.string().min(6, "Phone number is too short"),
+  date: z
+    .string()
+    .regex(/^\d{2}-\d{2}-\d{4}$/, "Format must be DD-MM-YYYY")
+    .refine((val) => {
+      const [day, month, year] = val.split("-").map(Number);
+      const date = new Date(year, month - 1, day);
+
+      return (
+        date.getFullYear() === year &&
+        date.getMonth() === month - 1 &&
+        date.getDate() === day
+      );
+    }, "Invalid calendar date"),
+  startTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, "Invalid time format (expected HH:MM)"),
+});
+
 export const createAppointmentSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email format"),
